@@ -1,4 +1,4 @@
-﻿import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from './user.model';
 
@@ -36,7 +36,7 @@ export async function register(input: RegisterInput) {
 
   const hashed = await bcrypt.hash(password, 12);
   const user = await User.create({ name, phone, password: hashed, village, language });
-  const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
   return { token, user: sanitizeUser(user) };
 }
 
@@ -50,6 +50,6 @@ export async function login(input: LoginInput) {
   const match = await bcrypt.compare(password, user.password);
   if (!match) throw { code: 'INCORRECT_PASSWORD', message: 'Incorrect password', status: 401 };
 
-  const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
   return { token, user: sanitizeUser(user) };
 }

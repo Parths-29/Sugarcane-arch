@@ -1,4 +1,4 @@
-﻿import { Router, Request, Response } from "express";
+import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRepository } from "../repositories/user.repository";
@@ -20,7 +20,7 @@ authController.post("/register", async (req: Request, res: Response) => {
     if (await UserRepository.findByPhone(phone)) { res.status(409).json({ code: "PHONE_DUPLICATE", message: "Account with this number exists" }); return; }
     const hashed = await bcrypt.hash(password, 12);
     const user = await UserRepository.create({ name, phone, password: hashed, village, language });
-    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
     res.status(201).json({ token, user: sanitize(user) });
   } catch (e) { res.status(500).json({ code: "SERVER_ERROR", message: "Server error" }); }
 });
@@ -31,7 +31,7 @@ authController.post("/login", async (req: Request, res: Response) => {
     const user = await UserRepository.findByPhone(phone);
     if (!user) { res.status(401).json({ code: "NO_ACCOUNT_FOUND", message: "No account found" }); return; }
     if (!(await bcrypt.compare(password, user.password))) { res.status(401).json({ code: "INCORRECT_PASSWORD", message: "Incorrect password" }); return; }
-    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
     res.json({ token, user: sanitize(user) });
   } catch (e) { res.status(500).json({ code: "SERVER_ERROR", message: "Server error" }); }
 });

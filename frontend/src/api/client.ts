@@ -1,4 +1,4 @@
-﻿/**
+/**
  * API client - thin fetch wrapper with JWT attachment.
  * Reads VITE_API_BASE_URL at build time.
  */
@@ -54,19 +54,29 @@ async function request<T>(
   });
 
   if (!res.ok) {
-    let code = 'UNKNOWN_ERROR';
-    let message = 'An unexpected error occurred';
+    let code = `HTTP_${res.status}`;
+    let message = res.statusText || 'An unexpected error occurred';
     try {
-      const body = await res.json();
-      code = body.code ?? code;
-      message = body.message ?? message;
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const body = await res.json();
+        code = body.code ?? code;
+        message = body.message ?? message;
+      } else {
+        const text = await res.text();
+        if (text) message = text.slice(0, 150);
+      }
     } catch (_e) {
-      // ignore JSON parse errors
+      // ignore parse errors
     }
     throw new ApiClientError(code, message, res.status);
   }
 
-  return res.json() as Promise<T>;
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return res.json() as Promise<T>;
+  }
+  return (await res.text()) as unknown as T;
 }
 
 export const api = {

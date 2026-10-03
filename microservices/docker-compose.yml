@@ -1,4 +1,4 @@
-﻿version: "3.9"
+version: "3.9"
 
 services:
   gateway:
@@ -60,6 +60,7 @@ services:
 
   prometheus:
     image: prom/prometheus
+    ports: ["9090:9090"]
     volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
     command: ["--config.file=/etc/prometheus/prometheus.yml"]
     restart: unless-stopped

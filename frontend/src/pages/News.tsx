@@ -23,17 +23,20 @@ export default function News() {
       setIsLoadingNews(true);
       try {
         const res = await fetch(`${API_BASE_URL}/api/news`);
-        if (res.ok) {
+        const contentType = res.headers.get("content-type") || "";
+        if (res.ok && contentType.includes("application/json")) {
           const data = await res.json();
-          // Merge AI text with mock thumbnails
-          const newArticles = data.articles.map((aiArticle: any, index: number) => {
-            const mockIndex = index % MOCK_ARTICLES.length;
-            return {
-              ...aiArticle,
-              thumbnail: MOCK_ARTICLES[mockIndex].thumbnail
-            };
-          });
-          setArticles(newArticles);
+          if (Array.isArray(data?.articles)) {
+            // Merge AI text with mock thumbnails
+            const newArticles = data.articles.map((aiArticle: any, index: number) => {
+              const mockIndex = index % MOCK_ARTICLES.length;
+              return {
+                ...aiArticle,
+                thumbnail: MOCK_ARTICLES[mockIndex].thumbnail
+              };
+            });
+            setArticles(newArticles);
+          }
         }
       } catch (err) {
         console.error('Error fetching AI news:', err);
@@ -48,18 +51,21 @@ export default function News() {
     setIsLoadingMore(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/news`);
-      if (res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (res.ok && contentType.includes("application/json")) {
         const data = await res.json();
-        const newArticles = data.articles.map((aiArticle: any, index: number) => {
-          const mockIndex = (articles.length + index) % MOCK_ARTICLES.length;
-          return {
-            ...aiArticle,
-            id: aiArticle.id + '-' + Date.now() + index, // Ensure unique ID
-            thumbnail: MOCK_ARTICLES[mockIndex].thumbnail
-          };
-        });
-        setArticles(prev => [...prev, ...newArticles]);
-        setVisibleCount(prev => prev + newArticles.length);
+        if (Array.isArray(data?.articles)) {
+          const newArticles = data.articles.map((aiArticle: any, index: number) => {
+            const mockIndex = (articles.length + index) % MOCK_ARTICLES.length;
+            return {
+              ...aiArticle,
+              id: aiArticle.id + '-' + Date.now() + index, // Ensure unique ID
+              thumbnail: MOCK_ARTICLES[mockIndex].thumbnail
+            };
+          });
+          setArticles(prev => [...prev, ...newArticles]);
+          setVisibleCount(prev => prev + newArticles.length);
+        }
       }
     } catch (err) {
       console.error('Error fetching more AI news:', err);
@@ -73,18 +79,21 @@ export default function News() {
     setIsLoadingNews(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/news?q=${encodeURIComponent(searchQuery)}`);
-      if (res.ok) {
+      const contentType = res.headers.get("content-type") || "";
+      if (res.ok && contentType.includes("application/json")) {
         const data = await res.json();
-        const newArticles = data.articles.map((aiArticle: any, index: number) => {
-          const mockIndex = (articles.length + index) % MOCK_ARTICLES.length;
-          return {
-            ...aiArticle,
-            id: aiArticle.id + '-' + Date.now() + index,
-            thumbnail: MOCK_ARTICLES[mockIndex].thumbnail
-          };
-        });
-        setArticles(prev => [...newArticles, ...prev]);
-        setVisibleCount(prev => prev + newArticles.length);
+        if (Array.isArray(data?.articles)) {
+          const newArticles = data.articles.map((aiArticle: any, index: number) => {
+            const mockIndex = (articles.length + index) % MOCK_ARTICLES.length;
+            return {
+              ...aiArticle,
+              id: aiArticle.id + '-' + Date.now() + index,
+              thumbnail: MOCK_ARTICLES[mockIndex].thumbnail
+            };
+          });
+          setArticles(prev => [...newArticles, ...prev]);
+          setVisibleCount(prev => prev + newArticles.length);
+        }
       }
     } catch (err) {
       console.error('Error generating specific news:', err);

@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
@@ -32,7 +32,7 @@ app.post("/register", async (req, res) => {
     if (await User.findOne({ phone })) { res.status(409).json({ code: "PHONE_DUPLICATE", message: "Account exists" }); return; }
     const hashed = await bcrypt.hash(password, 12);
     const user = await User.create({ name, phone, password: hashed, village, language });
-    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
     regsTotal.inc();
     res.status(201).json({ token, user: sanitize(user) });
   } catch { res.status(500).json({ code: "SERVER_ERROR", message: "Server error" }); }
@@ -44,7 +44,7 @@ app.post("/login", async (req, res) => {
     const user = await User.findOne({ phone });
     if (!user) { res.status(401).json({ code: "NO_ACCOUNT_FOUND", message: "No account found" }); return; }
     if (!(await bcrypt.compare(password, user.password))) { res.status(401).json({ code: "INCORRECT_PASSWORD", message: "Incorrect password" }); return; }
-    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign({ userId: user._id, phone }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
     loginsTotal.inc();
     res.json({ token, user: sanitize(user) });
   } catch { res.status(500).json({ code: "SERVER_ERROR", message: "Server error" }); }

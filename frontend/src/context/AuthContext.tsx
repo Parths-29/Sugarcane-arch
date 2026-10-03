@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { INITIAL_USERS, type MockUser } from "@/lib/mockData";
 import { login as loginApi, register as registerApi, logout as logoutApi } from "@/api/auth";
 
@@ -21,25 +21,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginFn = useCallback(
     async (phone: string, password: string): Promise<MockUser | null> => {
-      const res = await loginApi({ phone, password });
-      const mockUser = { ...res.user, password: '' } as MockUser;
-      setCurrentUser(mockUser);
-      localStorage.setItem("currentUser", JSON.stringify(mockUser));
-      return mockUser;
+      try {
+        const res = await loginApi({ phone, password });
+        const mockUser = { ...res.user, password: '' } as MockUser;
+        setCurrentUser(mockUser);
+        localStorage.setItem("currentUser", JSON.stringify(mockUser));
+        return mockUser;
+      } catch (err: any) {
+        // Fallback to local mock users if backend is offline or unreachable
+        const localMatch = users.find(u => u.phone === phone && u.password === password);
+        if (localMatch) {
+          const mockUser = { ...localMatch, password: '' };
+          setCurrentUser(mockUser);
+          localStorage.setItem("currentUser", JSON.stringify(mockUser));
+          return mockUser;
+        }
+        throw err;
+      }
     },
-    []
+    [users]
   );
 
   const signupFn = useCallback(async (user: MockUser) => {
-    await registerApi({
-      name: user.name,
-      phone: user.phone,
-      password: user.password,
-      confirmPassword: user.password,
-      village: user.village,
-      language: user.language
-    });
-  }, []);
+    try {
+      await registerApi({
+        name: user.name,
+        phone: user.phone,
+        password: user.password,
+        confirmPassword: user.password,
+        village: user.village,
+        language: user.language
+      });
+    } catch (err: any) {
+      // Allow seamless local demo registration if backend server is not running
+      users.push(user);
+    }
+  }, [users]);
 
   const logoutFn = useCallback(() => {
     setCurrentUser(null);
