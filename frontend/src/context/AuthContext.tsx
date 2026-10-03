@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+﻿import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { INITIAL_USERS, type MockUser } from "@/lib/mockData";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+import { login as loginApi, register as registerApi, logout as logoutApi } from "@/api/auth";
 
 interface AuthContextType {
   currentUser: MockUser | null;
@@ -20,45 +19,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [users] = useState<MockUser[]>([...INITIAL_USERS]);
 
-  const login = useCallback(
+  const loginFn = useCallback(
     async (phone: string, password: string): Promise<MockUser | null> => {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentUser(data.user);
-        localStorage.setItem("currentUser", JSON.stringify(data.user));
-        return data.user;
-      } else {
-        const errData = await res.json();
-        throw new Error(errData.message || 'Login failed');
-      }
+      const res = await loginApi({ phone, password });
+      const mockUser = { ...res.user, password: '' } as MockUser;
+      setCurrentUser(mockUser);
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
+      return mockUser;
     },
     []
   );
 
-  const signup = useCallback(async (user: MockUser) => {
-    const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user)
+  const signupFn = useCallback(async (user: MockUser) => {
+    await registerApi({
+      name: user.name,
+      phone: user.phone,
+      password: user.password,
+      confirmPassword: user.password,
+      village: user.village,
+      language: user.language
     });
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.message || 'Signup failed');
-    }
   }, []);
 
-  const logout = useCallback(() => {
+  const logoutFn = useCallback(() => {
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
+    logoutApi();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, users, login, signup, logout }}>
+    <AuthContext.Provider value={{ currentUser, users, login: loginFn, signup: signupFn, logout: logoutFn }}>
       {children}
     </AuthContext.Provider>
   );

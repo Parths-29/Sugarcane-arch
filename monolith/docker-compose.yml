@@ -6,34 +6,15 @@ services:
       - "4000:4000"
     environment:
       - PORT=4000
-      - MONGODB_URI=mongodb://mongo:27017/sugarcane_monolith
       - JWT_SECRET=${JWT_SECRET:-dev_secret_change_in_prod_32chars!!}
       - JWT_EXPIRES_IN=7d
       - WEATHER_CACHE_TTL_MS=600000
       - NODE_ENV=production
-    depends_on:
-      mongo:
-        condition: service_healthy
+    env_file:
+      - ../.env
     restart: unless-stopped
     networks:
       - monolith-net
-
-  mongo:
-    image: mongo:7
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    restart: unless-stopped
-    networks:
-      - monolith-net
-
-volumes:
-  mongo-data:
 
 networks:
   monolith-net:

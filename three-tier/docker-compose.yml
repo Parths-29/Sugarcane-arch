@@ -23,38 +23,15 @@ services:
       - "4001"
     environment:
       - PORT=4001
-      - MONGODB_URI=mongodb://data:27017/sugarcane_three_tier
       - JWT_SECRET=${JWT_SECRET:-dev_secret_change_in_prod_32chars!!}
       - JWT_EXPIRES_IN=7d
       - WEATHER_CACHE_TTL_MS=600000
       - NODE_ENV=production
-    depends_on:
-      data:
-        condition: service_healthy
+    env_file:
+      - ../.env
     restart: unless-stopped
     networks:
       - three-tier-net
-
-  # Data tier – MongoDB
-  data:
-    image: mongo:7
-    expose:
-      - "27017"
-    volumes:
-      - mongo-data:/data/db
-      - ./data/init:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    restart: unless-stopped
-    networks:
-      - three-tier-net
-
-volumes:
-  mongo-data:
 
 networks:
   three-tier-net:
