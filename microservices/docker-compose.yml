@@ -1,0 +1,78 @@
+﻿version: "3.9"
+
+services:
+  gateway:
+    build: ./gateway
+    ports: ["8000:8000"]
+    env_file: ./gateway/.env.example
+    depends_on: { auth: { condition: service_healthy }, weather: { condition: service_healthy }, advisory: { condition: service_healthy }, translation: { condition: service_healthy } }
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  auth:
+    build: ./auth
+    env_file: ./auth/.env.example
+    depends_on: { auth-mongo: { condition: service_healthy } }
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  auth-mongo:
+    image: mongo:7
+    volumes: ["auth-mongo-data:/data/db"]
+    healthcheck: { test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"], interval: 10s, timeout: 5s, retries: 5, start_period: 20s }
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  weather:
+    build: ./weather
+    env_file: ./weather/.env.example
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  advisory:
+    build: ./advisory
+    env_file: ./advisory/.env.example
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  translation:
+    build: ./translation
+    env_file: ./translation/.env.example
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  notification:
+    build: ./notification
+    env_file: ./notification/.env.example
+    depends_on: { redis: { condition: service_started }, translation: { condition: service_healthy } }
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  prometheus:
+    image: prom/prometheus
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+  grafana:
+    image: grafana/grafana
+    ports: ["3000:3000"]
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    restart: unless-stopped
+    networks: ["ms-net"]
+
+volumes:
+  auth-mongo-data:
+
+networks:
+  ms-net:

@@ -1,0 +1,23 @@
+﻿global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['gateway:8000']
+  - job_name: 'auth'
+    static_configs:
+      - targets: ['auth:8001']
+  - job_name: 'weather'
+    static_configs:
+      - targets: ['weather:8002']
+  - job_name: 'advisory'
+    static_configs:
+      - targets: ['advisory:8003']
+  - job_name: 'translation'
+    static_configs:
+      - targets: ['translation:8004']
+  - job_name: 'notification'
+    static_configs:
+      - targets: ['notification:8005']
