@@ -34,6 +34,16 @@ const STATUS_COLORS = {
 };
 
 const STORAGE_KEY = "DesiCane-inventory";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || "";
+
+function recordInventoryMetric(action: "add" | "edit" | "delete", category: InventoryItem["category"]) {
+  // Telemetry is best-effort: local inventory remains usable if monitoring is down.
+  void fetch(`${API_BASE_URL}/api/metrics/inventory`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, category, source: "site" }),
+  }).catch(() => undefined);
+}
 
 function loadInventory(): InventoryItem[] {
   try {
@@ -114,12 +124,14 @@ export default function Inventory() {
   const handleSubmit = () => {
     if (!formName.trim()) return;
     if (editingItem) {
+      recordInventoryMetric("edit", formCategory);
       setItems((prev) => prev.map((a) =>
         a.id === editingItem.id
           ? { ...a, category: formCategory, name: formName, quantity: formQuantity, unit: formUnit, status: formStatus }
           : a
       ));
     } else {
+      recordInventoryMetric("add", formCategory);
       const newItem: InventoryItem = {
         id: Date.now().toString(),
         category: formCategory,
@@ -146,6 +158,8 @@ export default function Inventory() {
   };
 
   const handleDelete = (id: string) => {
+    const item = items.find((entry) => entry.id === id);
+    if (item) recordInventoryMetric("delete", item.category);
     setItems((prev) => prev.filter((a) => a.id !== id));
   };
 

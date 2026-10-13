@@ -1,7 +1,5 @@
 {
-  "annotations": {
-    "list": []
-  },
+  "annotations": { "list": [] },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -9,144 +7,146 @@
   "links": [],
   "liveNow": true,
   "panels": [
+    { "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100, "title": "Live Operations", "type": "row" },
     {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
-      "id": 100,
-      "title": "System Overview & Traffic",
-      "type": "row"
+      "id": 1, "title": "Gateway requests (last 5 minutes)", "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short", "decimals": 0 } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(gateway_requests_total[5m])) or vector(0)", "legendFormat": "Requests" }]
     },
     {
-      "id": 1,
-      "title": "Gateway Total Requests",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth"
-          },
-          "unit": "reqps"
-        }
-      },
+      "id": 2, "title": "Advisories computed", "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "palette-classic" } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(advisory_decisions_total) or vector(0)", "legendFormat": "Decisions" }]
+    },
+    {
+      "id": 3, "title": "Notifications queued", "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(notification_jobs_enqueued_total) or vector(0)", "legendFormat": "Queued" }]
+    },
+    {
+      "id": 4, "title": "Notifications processed", "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(notifications_sent_total) or vector(0)", "legendFormat": "Processed" }]
+    },
+    {
+      "id": 13, "title": "Registrations", "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(auth_registrations_total) or vector(0)", "legendFormat": "Registered" }]
+    },
+    {
+      "id": 14, "title": "Logins", "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(auth_logins_total) or vector(0)", "legendFormat": "Logins" }]
+    },
+    { "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 }, "id": 101, "title": "Traffic and Asynchronous Queue", "type": "row" },
+    {
+      "id": 5, "title": "API request activity (requests/min)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(gateway_requests_total[1m])) by (route, status)", "legendFormat": "{{route}} · {{status}}" }]
+    },
+    {
+      "id": 6, "title": "Advisory decisions (per minute)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(advisory_decisions_total[1m])) by (decision)", "legendFormat": "{{decision}}" }]
+    },
+    {
+      "id": 7, "title": "Redis Stream: waiting and pending", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "fillOpacity": 12 } } },
       "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(gateway_requests_total[1m])) by (route, status)",
-          "legendFormat": "{{route}} ({{status}})"
-        }
+        { "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "notification_queue_lag", "legendFormat": "Waiting in stream" },
+        { "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "notification_pending_messages", "legendFormat": "Delivered, awaiting ack" }
       ]
     },
     {
-      "id": 2,
-      "title": "Circuit Breaker State (0=Closed, 1=Open, 2=Half-Open)",
-      "type": "stat",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 1 },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "HEALTHY (Closed)", "color": "green" }, "1": { "text": "TRIPPED (Open)", "color": "red" }, "2": { "text": "RECOVERING (Half-Open)", "color": "yellow" } } }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
-            ]
-          }
-        }
-      },
+      "id": 8, "title": "Notifications queued vs processed (per minute)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } },
       "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "circuit_breaker_state",
-          "legendFormat": "{{service}}"
-        }
+        { "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(notification_jobs_enqueued_total[1m]))", "legendFormat": "Queued" },
+        { "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(notifications_sent_total[1m]))", "legendFormat": "Processed" }
       ]
     },
+    { "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 }, "id": 102, "title": "Health and Resilience", "type": "row" },
     {
-      "id": 3,
-      "title": "Stale Cache Fallbacks (Circuit Breaker Tripped)",
-      "type": "stat",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 1 },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "blue", "value": null },
-              { "color": "orange", "value": 1 }
-            ]
-          }
-        }
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(fallback_total) or vector(0)",
-          "legendFormat": "Fallbacks"
-        }
-      ]
+      "id": 9, "title": "Service health", "type": "stat",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 24 },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "OFFLINE", "color": "red" }, "1": { "text": "ONLINE", "color": "green" } } }] } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "up", "legendFormat": "{{job}}" }]
     },
     {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
-      "id": 101,
-      "title": "Microservices Health & Logins",
-      "type": "row"
+      "id": 10, "title": "Weather circuit breaker", "type": "stat",
+      "gridPos": { "h": 6, "w": 3, "x": 18, "y": 24 },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "CLOSED / HEALTHY", "color": "green" }, "1": { "text": "OPEN / FALLBACK", "color": "red" }, "2": { "text": "HALF OPEN / PROBING", "color": "yellow" } } }] } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "circuit_breaker_state", "legendFormat": "{{service}}" }]
     },
     {
-      "id": 4,
-      "title": "Microservices Up Status (1=Online, 0=Down)",
-      "type": "stat",
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 10 },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            { "type": "value", "options": { "0": { "text": "OFFLINE", "color": "red" }, "1": { "text": "ONLINE", "color": "green" } } }
-          ]
-        }
-      },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "up",
-          "legendFormat": "{{job}}"
-        }
-      ]
+      "id": 11, "title": "Weather fallbacks", "type": "stat",
+      "gridPos": { "h": 6, "w": 3, "x": 21, "y": 24 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }] } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(fallback_total) or vector(0)", "legendFormat": "Fallbacks" }]
     },
     {
-      "id": 5,
-      "title": "Auth Activity (Registrations & Logins)",
-      "type": "timeseries",
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 10 },
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "auth_registrations_total",
-          "legendFormat": "Registrations"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "auth_logins_total",
-          "legendFormat": "Logins"
-        }
-      ]
+      "id": 12, "title": "Redis connection", "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 24 },
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "DISCONNECTED", "color": "red" }, "1": { "text": "CONNECTED", "color": "green" } } }] } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "notification_redis_up", "legendFormat": "Redis" }]
+    },
+    { "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 }, "id": 103, "title": "Website activity: inventory and AI news", "type": "row" },
+    {
+      "id": 15, "title": "Inventory changes (last 5 minutes)", "type": "stat",
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "palette-classic" } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(inventory_actions_total[5m])) or vector(0)", "legendFormat": "Changes" }]
+    },
+    {
+      "id": 16, "title": "Gemini articles generated (last 5 minutes)", "type": "stat",
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "palette-classic" } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(news_articles_generated_total[5m])) or vector(0)", "legendFormat": "Articles" }]
+    },
+    {
+      "id": 17, "title": "Gemini generation attempts (last 5 minutes)", "type": "stat",
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 32 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "palette-classic" } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(news_generation_requests_total[5m])) or vector(0)", "legendFormat": "Requests" }]
+    },
+    {
+      "id": 18, "title": "Inventory site vs synthetic demo activity (per minute)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(inventory_actions_total[1m])) by (source, action, category)", "legendFormat": "{{source}} · {{action}} · {{category}}" }]
+    },
+    {
+      "id": 19, "title": "Gemini generation result (per minute)", "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "sum(increase(news_generation_requests_total[1m])) by (result)", "legendFormat": "{{result}}" }]
+    },
+    { "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 }, "id": 104, "title": "Redis persistence and queue", "type": "row" },
+    {
+      "id": 20, "title": "Redis Stream entries retained", "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "palette-classic" } } },
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" }, "expr": "notification_stream_length or vector(0)", "legendFormat": "Stream entries" }]
     }
   ],
   "refresh": "5s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["sugarcane", "microservices"],
-  "time": {
-    "from": "now-15m",
-    "to": "now"
-  },
+  "tags": ["sugarcane", "microservices", "redis"],
+  "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
   "title": "DesiCane Microservices Live Dashboard",
   "uid": "desicane-ms",
-  "version": 1
+  "version": 3
 }

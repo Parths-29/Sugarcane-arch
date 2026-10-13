@@ -101,6 +101,9 @@ export default function ArchDemo() {
 
   const [result, setResult] = useState<AdvisoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [burstLoading, setBurstLoading] = useState(false);
+  const [burstProgress, setBurstProgress] = useState<string | null>(null);
+  const [burstError, setBurstError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [responseTimeMs, setResponseTimeMs] = useState<number | null>(null);
 
@@ -132,6 +135,41 @@ export default function ArchDemo() {
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  }, [form]);
+
+  const generateDashboardTraffic = useCallback(async () => {
+    const samples: Array<{ growthStage: GrowthStage; soilMoisturePct: number }> = [
+      { growthStage: "germination", soilMoisturePct: 18 },
+      { growthStage: "tillering", soilMoisturePct: 32 },
+      { growthStage: "grand_growth", soilMoisturePct: 48 },
+      { growthStage: "maturity", soilMoisturePct: 72 },
+      { growthStage: "tillering", soilMoisturePct: 20 },
+      { growthStage: "grand_growth", soilMoisturePct: 28 },
+      { growthStage: "maturity", soilMoisturePct: 55 },
+      { growthStage: "germination", soilMoisturePct: 65 },
+      { growthStage: "grand_growth", soilMoisturePct: 24 },
+      { growthStage: "tillering", soilMoisturePct: 58 },
+      { growthStage: "maturity", soilMoisturePct: 36 },
+      { growthStage: "germination", soilMoisturePct: 44 },
+    ];
+
+    setBurstLoading(true);
+    setBurstError(null);
+    setBurstProgress("Starting live traffic...");
+    try {
+      for (let i = 0; i < samples.length; i++) {
+        const response = await getAdvisory({ ...form, ...samples[i] });
+        if (!response.notificationQueued) {
+          throw new Error("Advisory completed, but Redis did not queue its notification. Check the Redis connection.");
+        }
+        setBurstProgress(`Sent ${i + 1} of ${samples.length} advisories and queued notifications.`);
+      }
+      setBurstProgress(`Done: ${samples.length} live advisories sent. Refresh the Grafana dashboard.`);
+    } catch (err) {
+      setBurstError(err instanceof ApiClientError ? `${err.code}: ${err.message}` : err instanceof Error ? err.message : "Traffic generation failed. Check the backend and login.");
+    } finally {
+      setBurstLoading(false);
     }
   }, [form]);
 
@@ -322,6 +360,22 @@ export default function ArchDemo() {
             {!loginState.loggedIn && (
               <p className="text-xs text-center text-gray-400">Login first to use this feature</p>
             )}
+            {ARCH_MODE === "microservices" && <div className="mt-4 border-t border-gray-100 pt-4">
+              <button
+                id="demo-grafana-traffic"
+                type="button"
+                onClick={generateDashboardTraffic}
+                disabled={!loginState.loggedIn || burstLoading}
+                className="w-full rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-800 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {burstLoading ? "Generating live metrics..." : "Generate Grafana Demo Traffic (12 requests)"}
+              </button>
+              <p className="mt-2 text-center text-xs text-gray-500">
+                Sends real advisories through the gateway and queues mock notifications in Redis.
+              </p>
+              {burstProgress && <p aria-live="polite" className="mt-2 text-center text-xs text-emerald-700">{burstProgress}</p>}
+              {burstError && <p role="alert" className="mt-2 text-center text-xs text-red-600">{burstError}</p>}
+            </div>}
           </form>
         </motion.div>
 

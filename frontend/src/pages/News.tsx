@@ -7,7 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { MOCK_ARTICLES } from "@/lib/mockData";
 import { Button } from "@/components/ui/Button";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '';
 const ITEMS_PER_PAGE = 4;
 
 export default function News() {
@@ -17,12 +17,14 @@ export default function News() {
   const [articles, setArticles] = useState(MOCK_ARTICLES);
   const [isLoadingNews, setIsLoadingNews] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [newsError, setNewsError] = useState("");
 
   useEffect(() => {
     async function fetchNews() {
       setIsLoadingNews(true);
       try {
         const res = await fetch(`${API_BASE_URL}/api/news`);
+        if (!res.ok) throw new Error(`News service returned ${res.status}`);
         const contentType = res.headers.get("content-type") || "";
         if (res.ok && contentType.includes("application/json")) {
           const data = await res.json();
@@ -40,6 +42,7 @@ export default function News() {
         }
       } catch (err) {
         console.error('Error fetching AI news:', err);
+        setNewsError("AI news could not be generated. Showing the saved sample articles instead.");
       } finally {
         setIsLoadingNews(false);
       }
@@ -51,6 +54,7 @@ export default function News() {
     setIsLoadingMore(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/news`);
+        if (!res.ok) throw new Error(`News service returned ${res.status}`);
       const contentType = res.headers.get("content-type") || "";
       if (res.ok && contentType.includes("application/json")) {
         const data = await res.json();
@@ -69,6 +73,7 @@ export default function News() {
       }
     } catch (err) {
       console.error('Error fetching more AI news:', err);
+        setNewsError("Could not load more AI articles. Please try again.");
     } finally {
       setIsLoadingMore(false);
     }
@@ -77,8 +82,10 @@ export default function News() {
   const handleGenerateSearch = async () => {
     if (!searchQuery.trim()) return;
     setIsLoadingNews(true);
+    setNewsError("");
     try {
       const res = await fetch(`${API_BASE_URL}/api/news?q=${encodeURIComponent(searchQuery)}`);
+      if (!res.ok) throw new Error(`News service returned ${res.status}`);
       const contentType = res.headers.get("content-type") || "";
       if (res.ok && contentType.includes("application/json")) {
         const data = await res.json();
@@ -97,6 +104,7 @@ export default function News() {
       }
     } catch (err) {
       console.error('Error generating specific news:', err);
+      setNewsError("Gemini could not generate articles for this topic. Please try again.");
     } finally {
       setIsLoadingNews(false);
     }
@@ -155,8 +163,13 @@ export default function News() {
         {isLoadingNews && (
           <div className="flex justify-center items-center py-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-            <span className="ml-3 text-neutral-500">Generating live news...</span>
+            <span className="ml-3 text-neutral-500">Generating AI agriculture briefs...</span>
           </div>
+        )}
+        {!!newsError && !isLoadingNews && (
+          <p role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+            {newsError}
+          </p>
         )}
 
         {/* Articles Grid */}

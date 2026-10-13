@@ -33,3 +33,5 @@ Three architectural implementations of the DesiCane irrigation advisory system.
    (Set `VITE_API_BASE_URL=http://localhost:8000` in frontend `.env.example`)
 
 See `/docs` for full details.
+
+For the Redis, Prometheus, and Grafana live demo workflow, see [`docs/devops-demo.md`](docs/devops-demo.md).

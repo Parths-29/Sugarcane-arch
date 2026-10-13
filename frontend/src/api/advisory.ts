@@ -24,6 +24,7 @@ export interface AdvisoryResponse {
   staleWeather: boolean;
   language: Language;
   latencyMs: number;
+  notificationQueued?: boolean;
 }
 
 export interface AdvisoryRequest {
